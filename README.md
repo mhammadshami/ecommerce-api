@@ -34,3 +34,7 @@ JWT_SECRET=
 ## API Documentation
 
 Swagger: http://localhost:3000/api-docs
+
+## Postman Collection
+
+/docs/ecommerce-api.postman_collection.json
