@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { OrdersService } from './orders.service';
@@ -27,13 +35,27 @@ export class OrdersController {
   @Roles('ADMIN')
   @Get()
   findAll() {
-    return this.ordersService.findAll()
+    return this.ordersService.findAll();
   }
 
   @Roles('ADMIN')
   @Get(':id/status')
-  updateStatus(@Param('id') id:string, @Body('status') status: OrderStatus) {
-    return this.ordersService.updateStatus(id, status)
+  updateStatus(@Param('id') id: string, @Body('status') status: OrderStatus) {
+    return this.ordersService.updateStatus(id, status);
+  }
+
+  @Roles('CUSTOMER')
+  @Patch(':id/cancel')
+  cancel(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.ordersService.cancelOrder(id, user.id);
+  }
+
+  @Roles('ADMIN')
+  @Patch(':id/status')
+  adminUpdateStatus(
+    @Param('id') id: string,
+    @Body('status') status: OrderStatus,
+  ) {
+    return this.ordersService.adminUpdatedStatus(id, status);
   }
 }
- 

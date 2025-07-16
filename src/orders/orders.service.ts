@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { OrderStatus } from '@prisma/client';
@@ -68,6 +73,35 @@ export class OrdersService {
   }
 
   async updateStatus(id: string, status: OrderStatus) {
+    return this.prisma.order.update({
+      where: { id },
+      data: {
+        status,
+      },
+    });
+  }
+
+  async cancelOrder(id: string, userId: string) {
+    const order = await this.prisma.order.findUnique({
+      where: { id },
+    });
+    if (!order) throw new NotFoundException('Order not found');
+
+    if (order.userId !== userId) throw new ForbiddenException('Access denied');
+    if (order.status !== 'PENDING')
+      throw new BadRequestException('Cannot cancel processed order');
+
+    return this.prisma.order.update({
+      where: {
+        id,
+      },
+      data: {
+        status: 'CANCELLED',
+      },
+    });
+  }
+
+  async adminUpdatedStatus(id: string, status: OrderStatus) {
     return this.prisma.order.update({
       where: { id },
       data: {
