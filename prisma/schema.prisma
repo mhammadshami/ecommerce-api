@@ -15,6 +15,7 @@ model User {
   role Role @default(CUSTOMER)
   sessions Session[]
   orders Order[]
+  payments Payment[]
   createdAt DateTime @default(now())
 }
 
@@ -45,6 +46,7 @@ model Order {
   user User @relation(fields: [userId], references: [id])
   items OrderItem[]
   status OrderStatus @default(PENDING)
+  payments Payment[]
   totalAmount Float 
   createdAt DateTime @default(now())
 }
@@ -59,7 +61,24 @@ model OrderItem {
   unitPrice Float
 }
 
-export enum OrderStatus {
+model Payment {
+  id String @id @default(uuid())
+  amount Float
+  status PaymentStatus @default(PENDING)
+  userId String 
+  user User @relation(fields: [userId], references: [id])
+  orderId String
+  order Order @relation(fields: [orderId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+enum PaymentStatus {
+  PENDING 
+  CONFIRMED 
+  FAILED
+}
+
+enum OrderStatus {
   PENDING 
   PROCESSING 
   SHIPPED 
