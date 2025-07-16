@@ -14,6 +14,13 @@ export class UsersService {
         name: dto.name,
         email: dto.email,
         password: hashedPassword,
+        role: dto.role,
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
       },
     });
   }

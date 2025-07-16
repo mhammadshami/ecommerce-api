@@ -5,6 +5,7 @@ import {
   Param,
   Patch,
   Post,
+  Put,
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
@@ -23,13 +24,14 @@ export class OrdersController {
   @Roles('CUSTOMER')
   @Post()
   create(@Body() dto: CreateOrderDto, @CurrentUser() user: any) {
-    return this.ordersService.create(dto, user.id);
+    console.log(user)
+    return this.ordersService.create(dto, user.userId);
   }
 
   @Roles('CUSTOMER')
   @Get('my')
   findMyOrders(@CurrentUser() user: any) {
-    return this.ordersService.findMyOrders(user.id);
+    return this.ordersService.findMyOrders(user.userId);
   }
 
   @Roles('ADMIN')
@@ -39,7 +41,7 @@ export class OrdersController {
   }
 
   @Roles('ADMIN')
-  @Get(':id/status')
+  @Patch(':id/status')
   updateStatus(@Param('id') id: string, @Body('status') status: OrderStatus) {
     return this.ordersService.updateStatus(id, status);
   }
@@ -47,7 +49,7 @@ export class OrdersController {
   @Roles('CUSTOMER')
   @Patch(':id/cancel')
   cancel(@Param('id') id: string, @CurrentUser() user: any) {
-    return this.ordersService.cancelOrder(id, user.id);
+    return this.ordersService.cancelOrder(id, user.userId);
   }
 
   @Roles('ADMIN')

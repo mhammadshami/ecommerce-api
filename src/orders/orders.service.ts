@@ -13,34 +13,44 @@ export class OrdersService {
   constructor(private prisma: PrismaService) {}
 
   async create(dto: CreateOrderDto, userId: string) {
-    const itemsData = await Promise.all(
-      dto.items.map(async (item) => {
-        const product = await this.prisma.product.findUnique({
-          where: { id: item.productId },
-        });
-        if (!product) throw new NotFoundException('Product not found');
-        return {
-          productId: product.id,
-          quantity: item.quantity,
-          unitPrice: product.price,
-        };
-      }),
-    );
+    return this.prisma.$transaction(async (prisma) => {
+      const itemsData = await Promise.all(
+        dto.items.map(async (item) => {
+          const product = await prisma.product.findUnique({
+            where: { id: item.productId },
+          });
+          if (!product) throw new NotFoundException(`Product not found`);
+          if (product.stock < item.quantity)
+            throw new BadRequestException(
+              `Not enough stock for ${product.name}`,
+            );
 
-    const totalAmount = itemsData.reduce(
-      (sum, item) => sum + item.quantity * item.unitPrice,
-      0,
-    );
+          await prisma.product.update({
+            where: { id: product.id },
+            data: { stock: product.stock - item.quantity },
+          });
 
-    return this.prisma.order.create({
-      data: {
-        userId,
-        totalAmount,
-        items: { create: itemsData },
-      },
-      include: {
-        items: true,
-      },
+          return {
+            productId: product.id,
+            quantity: item.quantity,
+            unitPrice: product.price,
+          };
+        }),
+      );
+
+      const totalAmount = itemsData.reduce(
+        (sum, item) => sum + item.quantity * item.unitPrice,
+        0,
+      );
+
+      return prisma.order.create({
+        data: {
+          userId,
+          totalAmount,
+          items: { create: itemsData },
+        },
+        include: { items: true },
+      });
     });
   }
 
@@ -72,11 +82,11 @@ export class OrdersService {
     });
   }
 
-  async updateStatus(id: string, status: OrderStatus) {
+  updateStatus(id: string, status: OrderStatus) {
     return this.prisma.order.update({
       where: { id },
       data: {
-        status,
+        status
       },
     });
   }
@@ -88,6 +98,7 @@ export class OrdersService {
     if (!order) throw new NotFoundException('Order not found');
 
     if (order.userId !== userId) throw new ForbiddenException('Access denied');
+
     if (order.status !== 'PENDING')
       throw new BadRequestException('Cannot cancel processed order');
 
@@ -96,7 +107,7 @@ export class OrdersService {
         id,
       },
       data: {
-        status: 'CANCELLED',
+        status: 'CANCELLED'
       },
     });
   }

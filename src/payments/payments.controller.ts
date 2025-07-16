@@ -17,7 +17,7 @@ export class PaymentsController {
   @Roles('CUSTOMER')
   @Post()
   create(@Body() dto: CreatePaymentDto, @CurrentUser() user: any) {
-    return this.paymentsService.create(dto, user.id);
+    return this.paymentsService.create(dto, user.userId);
   }
 
   @Roles('CUSTOMER')
@@ -27,7 +27,7 @@ export class PaymentsController {
   }
 
   @Roles('ADMIN')
-  @Get('my')
+  @Get()
   findAll() {
     return this.paymentsService.findAll();
   }
