@@ -14,6 +14,7 @@ model User {
   password String 
   role Role @default(CUSTOMER)
   sessions Session[]
+  orders Order[]
   createdAt DateTime @default(now())
 }
 
@@ -34,7 +35,36 @@ model Product {
   description String 
   price Float 
   stock Int 
+  orders OrderItem[]
   createdAt DateTime @default(now())
+}
+
+model Order {
+  id String @id @default(uuid())
+  userId String 
+  user User @relation(fields: [userId], references: [id])
+  items OrderItem[]
+  status OrderStatus @default(PENDING)
+  totalAmount Float 
+  createdAt DateTime @default(now())
+}
+
+model OrderItem {
+  id String @id @default(uuid())
+  orderId String 
+  order Order @relation(fields: [orderId], references: [id]) 
+  productId String 
+  product Product @relation(fields: [productId], references: [id])
+  quantity Int 
+  unitPrice Float
+}
+
+export enum OrderStatus {
+  PENDING 
+  PROCESSING 
+  SHIPPED 
+  DELIVERED 
+  CANCELLED
 }
 
 enum Role {
